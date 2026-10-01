@@ -1,0 +1,132 @@
+corpus:
+  id: architecture-demo-v1
+  status: BASELINE
+  knowledge_domain: architecture
+  source_rule: "Every source must be uploaded to GCS input/architecture before normalization, chunking or indexing."
+  assets:
+    - id: ARCH-PR-001
+      type: principle
+      domain: general
+      title: Prefer managed services unless a clear requirement justifies custom infrastructure
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: ARCH-PR-002
+      type: principle
+      domain: general
+      title: Separate authoritative business state from conversational memory
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: DATA-PR-001
+      type: principle
+      domain: data
+      title: Preserve lineage and source provenance across the data lifecycle
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: SEC-PR-001
+      type: principle
+      domain: security
+      title: Apply least privilege and explicit workload identities
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: OFFICIAL
+    - id: NET-001
+      type: standard
+      domain: network
+      title: Private hybrid connectivity for protected enterprise data sources
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: SEC-001
+      type: standard
+      domain: security
+      title: Encryption in transit and at rest for sensitive data
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: OFFICIAL
+    - id: SEC-002
+      type: standard
+      domain: security
+      title: No direct public exposure of protected source databases
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: OFFICIAL
+    - id: IAM-001
+      type: standard
+      domain: iam
+      title: Role-based access and service-account separation
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: DATA-001
+      type: standard
+      domain: data
+      title: Data classification ownership and retention metadata
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: GOV-001
+      type: standard
+      domain: governance
+      title: Catalog and lineage for governed analytical datasets
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: OBS-001
+      type: standard
+      domain: operations
+      title: Central logging monitoring alerting and operational ownership
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: DEV-001
+      type: standard
+      domain: devsecops
+      title: CI/CD and Infrastructure as Code across environments
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: PAT-ING-001
+      type: pattern
+      domain: data_ingestion
+      title: Batch ingestion for database file and API sources
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: PAT-ING-002
+      type: pattern
+      domain: data_ingestion
+      title: Near-real-time ingestion for low-latency sources
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: PAT-DATA-001
+      type: pattern
+      domain: data_platform
+      title: Landing raw curated and serving data organization
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: PAT-DQ-001
+      type: pattern
+      domain: data_quality
+      title: Data quality controls quarantine and reprocessing
+      cloud_scope: [CLOUD_AGNOSTIC]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: RA-GCP-001
+      type: reference_architecture
+      domain: data_platform
+      title: Governed analytics platform on Google Cloud
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
+    - id: RA-DEVOPS-001
+      type: reference_architecture
+      domain: devsecops
+      title: Multi-environment CI/CD and IaC delivery architecture
+      cloud_scope: [GCP]
+      status: CURRENT
+      evidence_level: PROVEN
