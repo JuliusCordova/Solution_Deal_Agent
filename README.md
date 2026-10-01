@@ -107,6 +107,32 @@ The ingestion pipeline performs:
 
 For FAST DEMO, vector-index and graph artifacts are persisted in GCS through replaceable adapters. This is a demo storage decision, not a claim that object storage is the final production vector/graph database.
 
+## Golden Deal
+
+The canonical demo/regression scenario is a synthetic RFP from **Financiera Andina S.A.** for modernization of an enterprise data and analytics platform on GCP.
+
+The Golden Deal exercises:
+
+- RFP ingestion through GCS INPUT;
+- requirement extraction and ambiguity detection;
+- GraphRAG retrieval against governed architecture knowledge;
+- architecture decisions with evidence;
+- WBS/effort estimation;
+- deterministic pricing;
+- validator blocking findings;
+- human approval;
+- technical and economic proposal generation.
+
+See [`docs/GOLDEN_DEAL.md`](docs/GOLDEN_DEAL.md) and the fixture in [`demo/golden-deal/rfp/golden_rfp.md`](demo/golden-deal/rfp/golden_rfp.md).
+
+## Minimum architecture corpus
+
+The FAST DEMO baseline defines **18 governed architecture assets** across principles, standards, patterns and reference architectures. It covers the minimum evidence needed for the Golden Deal: security, IAM, hybrid connectivity, ingestion, data organization, quality, governance, observability, CI/CD/IaC and GCP reference architecture.
+
+Every corpus source must be uploaded to `GCS input/architecture/` before normalization, chunking, embedding or graph extraction.
+
+See [`docs/MINIMUM_ARCHITECTURE_CORPUS.md`](docs/MINIMUM_ARCHITECTURE_CORPUS.md) and [`demo/corpus/architecture/manifest.yaml`](demo/corpus/architecture/manifest.yaml).
+
 ## GCP construction baseline
 
 ```mermaid
@@ -184,14 +210,18 @@ A successful Golden Deal demonstrates end-to-end:
 - [`docs/SPEC.md`](docs/SPEC.md) — SPEC-001: user stories, FR/NFR, business rules, acceptance criteria and eval baseline.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — GCP, GraphRAG, ingestion, chunking and Hexagonal Slice architecture.
 - [`docs/AGENT_CONTRACTS.md`](docs/AGENT_CONTRACTS.md) — agent/tool behavioral boundaries.
+- [`docs/GOLDEN_DEAL.md`](docs/GOLDEN_DEAL.md) — SPEC-002 canonical end-to-end deal, seeded gaps, eval and acceptance criteria.
+- [`docs/MINIMUM_ARCHITECTURE_CORPUS.md`](docs/MINIMUM_ARCHITECTURE_CORPUS.md) — SPEC-002 governed 18-asset architecture corpus, graph model and retrieval eval baseline.
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — progressive FAST DEMO → MVP → PRODUCT evolution.
 - [`docs/CONSTRUCTION_READINESS.md`](docs/CONSTRUCTION_READINESS.md) — prerequisites and first implementation slices.
+- [`demo/golden-deal/rfp/golden_rfp.md`](demo/golden-deal/rfp/golden_rfp.md) — synthetic RFP authoring fixture.
+- [`demo/corpus/architecture/manifest.yaml`](demo/corpus/architecture/manifest.yaml) — minimum architecture corpus manifest.
 
 ## Current status
 
-**SPEC-001 construction baseline being finalized.**
+**SPEC-002 Golden Deal + minimum architecture corpus baseline defined.**
 
-The next gate is not “write all agents”. It is to prove the foundational knowledge chain:
+The next construction gate is to materialize the synthetic architecture assets and prove the foundational knowledge chain:
 
 ```text
 GCS INPUT
@@ -201,5 +231,5 @@ GCS INPUT
 → Vector Index
 → Graph Extraction
 → GraphRAG Retrieval
-→ Traceable Agent Output
+→ Golden Deal traceable output
 ```
