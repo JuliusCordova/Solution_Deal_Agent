@@ -1,94 +1,103 @@
 # Agent Contracts — Solution Deal Agent
 
-Status: DRAFT  
+Status: CONSTRUCTION BASELINE  
 Mode: FAST DEMO
 
 ## 1. Contract principles
 
-Every agent must have:
+Every agent has a clear responsibility, explicit inputs/outputs, permitted tools, evidence expectations, escalation rules and uncertainty behavior.
 
-- a clear responsibility;
-- explicit inputs;
-- explicit outputs;
-- permitted tools;
-- evidence expectations;
-- escalation / human-approval rules;
-- failure and uncertainty behavior.
+Global rules:
 
-Agents must not silently fabricate missing business information.
+- agents must not silently fabricate missing business information;
+- specialist agents do not own canonical state directly; they use Deal Spec services;
+- source documents must enter knowledge processing through controlled GCS input;
+- critical business rules remain outside free-form prompts;
+- every material architecture/commercial claim should expose evidence or state insufficient evidence.
 
 ## 2. Deal Orchestrator
 
 ### Purpose
-Coordinate the user conversation and deal lifecycle.
+Coordinate conversation and deal lifecycle.
 
 ### Inputs
 - user intent;
-- current Deal Spec;
+- Deal Spec;
 - lifecycle state;
-- validation status;
-- agent/tool results.
+- validation state;
+- specialist/tool results.
 
 ### Outputs
 - next action;
-- delegated specialist task;
+- delegated task;
 - clarification question;
 - lifecycle transition proposal;
-- user-facing progress summary.
+- progress summary.
 
 ### Rules
-- never bypass required approval gates;
+- never bypass approval gates;
 - preserve one canonical Deal Spec;
-- delegate specialist analysis instead of duplicating domain reasoning;
-- surface unresolved critical unknowns;
-- do not allow proposal-ready status while blocking findings remain unresolved unless a human explicitly accepts the exception.
+- delegate specialist reasoning;
+- surface critical unknowns;
+- do not permit clean proposal-ready state with unresolved blocking findings.
 
 ## 3. Intake / RFP Agent
 
 ### Purpose
-Transform opportunity information and source documents into structured deal requirements.
+Transform opportunity information and RFP/source documents into structured deal requirements.
 
 ### Inputs
-- user conversation;
-- uploaded RFP/RFI;
-- optional supporting documents;
-- current Deal Spec.
+- conversation;
+- GCS-backed source document references;
+- supporting documents;
+- current Deal Spec;
+- GraphRAG evidence when needed.
 
 ### Outputs
 - structured requirements;
-- requirement classification;
+- classifications;
 - source references;
-- known / unknown / assumed status;
+- known/unknown/assumed/derived status;
 - clarification questions;
-- extracted client constraints and deliverables.
+- client constraints and deliverables.
 
 ### Rules
-- preserve source references;
-- distinguish extracted facts from inferred assumptions;
-- do not promote ambiguous text to confirmed requirement without evidence;
-- request clarification for material gaps.
+- uploaded files must be persisted to GCS input before analysis;
+- preserve source GCS URI/version and locator;
+- distinguish facts from assumptions;
+- do not promote ambiguous text to confirmed requirement without evidence.
 
-## 4. Precedent / Knowledge Agent
+## 4. Knowledge / GraphRAG Agent
 
 ### Purpose
-Find reusable and comparable knowledge relevant to the current opportunity.
+Retrieve governed architecture knowledge and comparable precedents using hybrid semantic + graph retrieval.
 
 ### Inputs
 - Deal Spec search context;
-- requested knowledge domain;
-- metadata filters.
+- task/domain;
+- metadata filters;
+- optional entity seeds.
 
 ### Outputs
-- ranked evidence items;
-- similarity rationale;
-- source metadata;
-- confidence/relevance notes.
+- ranked evidence packet;
+- source/chunk references;
+- graph relationships/path used;
+- relevance/confidence notes;
+- insufficient-evidence result when appropriate.
+
+### Allowed tools/services
+- `knowledge.search_vector`
+- `knowledge.traverse_graph`
+- `knowledge.search_hybrid`
+- `document.get_source_fragment`
 
 ### Rules
-- keep architecture knowledge separate from historical commercial precedent;
-- never treat historical price as current authoritative price;
-- expose source identity and available metadata;
-- return "no sufficient evidence" when appropriate.
+- architecture knowledge and historical precedents remain separately identifiable;
+- historical price is not current authoritative price;
+- evidence must preserve source identity;
+- graph traversal is bounded;
+- unsupported retrieval is not converted into a fact;
+- return `INSUFFICIENT_EVIDENCE` when retrieval does not meet the configured threshold.
 
 ## 5. Architect Agent
 
@@ -97,26 +106,25 @@ Propose and explain technical solution decisions.
 
 ### Inputs
 - confirmed/assumed requirements;
-- current opportunity constraints;
-- governed architecture knowledge;
-- relevant historical precedents;
+- opportunity constraints;
+- governed architecture GraphRAG evidence;
+- relevant precedent GraphRAG evidence;
 - unresolved clarifications.
 
 ### Outputs
 - proposed architecture;
-- architecture decisions;
-- alternatives where material;
-- trade-offs;
+- ADR-like architecture decisions;
+- alternatives/trade-offs where material;
 - assumptions;
-- questions still required;
+- remaining questions;
 - evidence references.
 
 ### Rules
-- do not close a material decision if a critical unknown makes it unsafe or misleading;
-- cite current requirements behind major decisions;
-- use approved patterns/policies where available;
-- use historical proposals as supporting precedent, not policy;
-- record exceptions explicitly;
+- do not close a material decision when a critical unknown makes it misleading;
+- cite requirements behind material decisions;
+- prefer approved/current policies and patterns;
+- treat historical proposals as precedent, not policy;
+- explicitly record exceptions;
 - separate facts, recommendations and assumptions.
 
 ## 6. Effort Estimator Agent
@@ -126,8 +134,8 @@ Convert approved scope/design into a transparent effort model.
 
 ### Inputs
 - Deal Spec scope;
-- architecture solution;
-- WBS templates / rules;
+- selected architecture/components;
+- WBS templates/rules;
 - relevant precedents;
 - role catalog;
 - assumptions.
@@ -144,34 +152,34 @@ Convert approved scope/design into a transparent effort model.
 ### Rules
 - historical effort is evidence, not a direct copy target;
 - explain material adjustment factors;
-- keep commercial rate information outside the reasoning unless explicitly needed by pricing;
-- identify high-uncertainty line items.
+- identify high-uncertainty lines;
+- do not calculate authoritative client price.
 
 ## 7. Pricing Capability
 
 ### Purpose
-Calculate reproducible cost and client price from approved structured inputs.
+Calculate reproducible cost/client price from approved structured inputs.
 
 ### Inputs
 - effort by role/band;
-- unit/business rule set;
+- business-unit rules;
 - rate card;
 - currency;
 - margin/discount/contingency rules;
-- configured taxes or fees where relevant.
+- configured taxes/fees where relevant.
 
 ### Outputs
 - cost;
 - price;
 - margin;
 - calculation breakdown;
-- rule version / input snapshot.
+- rule/rate-card version;
+- input snapshot.
 
 ### Rules
-- calculation must be deterministic;
-- LLM cannot override calculation result;
-- every price must be reproducible from stored inputs and rule version;
-- missing required pricing inputs produce an error/clarification, not an invented value.
+- deterministic execution;
+- LLM cannot override result;
+- missing required pricing input produces clarification/error, not an invented value.
 
 ## 8. Validator Agent
 
@@ -181,59 +189,59 @@ Independently assess deal readiness and cross-domain consistency.
 ### Inputs
 - Deal Spec;
 - architecture decisions;
+- evidence packets;
 - estimate;
 - pricing result;
 - generated artifacts;
-- policy/validation rules.
+- validation policies.
 
 ### Outputs
 - findings;
 - severity;
 - evidence/reference;
-- recommended remediation;
+- remediation;
 - readiness result.
 
 ### Initial validation dimensions
 - requirement completeness;
 - architecture-policy alignment;
-- architecture evidence coverage;
+- evidence coverage;
 - estimate traceability;
-- pricing calculation integrity;
+- pricing integrity;
 - unresolved assumptions;
 - scope/WBS consistency;
 - duration consistency;
 - artifact consistency;
-- source traceability.
+- source provenance.
 
 ### Rules
-- validator must be independent from the artifact drafting step;
-- blocking findings stop clean proposal-ready status;
-- accepted exceptions must be recorded as human decisions.
+- independent from artifact drafting;
+- blocking findings stop clean readiness;
+- accepted exceptions are explicit human decisions.
 
 ## 9. Artifact Agent
 
 ### Purpose
-Generate business artifacts from the approved structured Deal Spec.
+Generate artifacts from an approved structured Deal Spec.
 
 ### Inputs
 - Deal Spec version;
-- selected artifact template;
+- artifact template;
 - approved technical/commercial content;
 - validation status.
 
 ### Outputs
-- draft proposal artifact;
-- metadata identifying Deal Spec version and generation time.
+- technical proposal draft;
+- economic/pricing summary;
+- generation metadata.
 
 ### Rules
-- cannot invent alternative scope, duration, price or commitments;
+- cannot invent different scope, duration, price or commitments;
 - must use canonical values;
-- unsupported narrative claims should reference evidence or be removed;
-- artifact generation does not constitute approval.
+- unsupported narrative claims are cited, flagged or removed;
+- artifact generation is not approval.
 
 ## 10. Human approval contract
-
-For FAST DEMO, a human approval record contains:
 
 ```yaml
 approval:
@@ -248,17 +256,66 @@ approval:
 
 Only an explicit approval may transition the opportunity to `PROPOSAL_READY`.
 
-## 11. Tool boundary
+## 11. Ingestion / chunking tool contract
 
-Agents reason; tools perform bounded actions.
+```yaml
+ingest_document:
+  input:
+    gcs_uri: gs://solution-deal-agent-demo/input/...
+    gcs_generation: string
+    knowledge_domain: architecture | precedent | opportunity
+  preconditions:
+    - object exists
+    - URI belongs to approved input location
+  output:
+    document_id: string
+    normalized_artifact: string
+    chunk_manifest: string
+    chunk_count: integer
+    chunker_version: string
+```
 
-Examples:
+The chunking capability rejects local paths and arbitrary URLs as authoritative inputs.
 
-- retrieve evidence;
-- read source fragments;
-- mutate structured Deal Spec fields;
-- calculate pricing;
-- generate a file;
-- record approval.
+## 12. GraphRAG evidence contract
 
-Tools that create side effects must expose explicit schemas and return inspectable results.
+```yaml
+evidence_packet:
+  query_id: string
+  domain: architecture | precedent | opportunity
+  items:
+    - source_document_id: string
+      chunk_id: string
+      source_gcs_uri: string
+      source_generation: string
+      locator: string
+      relevance_score: number
+      authority_status: string
+      graph_path: []
+  outcome: EVIDENCE_FOUND | INSUFFICIENT_EVIDENCE
+```
+
+## 13. Tool boundary
+
+Agents reason; tools/services perform bounded actions.
+
+Initial tool surface:
+
+- `deal.create`
+- `deal.get`
+- `deal.update_section`
+- `deal.add_requirement`
+- `deal.add_architecture_decision`
+- `deal.add_estimate`
+- `deal.add_validation_finding`
+- `document.register_gcs_source`
+- `document.ingest_from_gcs`
+- `knowledge.search_vector`
+- `knowledge.traverse_graph`
+- `knowledge.search_hybrid`
+- `document.get_source_fragment`
+- `pricing.calculate`
+- `artifact.generate`
+- `approval.record`
+
+Side-effect tools expose explicit schemas and inspectable results.
