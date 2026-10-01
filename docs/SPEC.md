@@ -1,16 +1,13 @@
-# SPEC — Solution Deal Agent FAST DEMO
+# SPEC-001 — Solution Deal Agent Construction Baseline
 
-Status: DRAFT  
+Status: READY FOR IMPLEMENTATION BASELINE  
 Mode: FAST DEMO  
-Method: PA-SDD / Minimum Sufficient Specification
+Method: PA-SDD / Minimum Sufficient Specification  
+Cloud: Google Cloud Platform
 
 ## 1. Business intent
 
-Pre-sales and solution-design work is often fragmented across people, documents, historical proposals, architecture standards, pricing spreadsheets and manual artifact creation.
-
-Solution Deal Agent will demonstrate that an agentic system can convert an opportunity or RFP into a structured, traceable deal definition and assist specialists through design, estimation, pricing, validation and proposal generation.
-
-The FAST DEMO is intended to prove the behavior and value proposition, not to reproduce every enterprise integration or production control.
+Pre-sales and solution-design work is fragmented across people, RFPs, proposal documents, architecture standards, spreadsheets and manually generated artifacts. Solution Deal Agent demonstrates an agentic workflow that converts an opportunity into a structured and traceable Deal Spec, retrieves governed knowledge through GraphRAG, proposes a technical solution, estimates effort, applies deterministic pricing, validates consistency and generates proposal artifacts with human approval.
 
 ## 2. North Star
 
@@ -21,315 +18,434 @@ Guardrails:
 - architecture-decision traceability;
 - estimate transparency;
 - commercial consistency;
-- human approval.
+- human approval;
+- retrieval groundedness.
 
-## 3. Scope — FAST DEMO
+## 3. Personas
 
-In scope:
+- **P-001 Sales / Pre-sales:** initiates and progresses an opportunity.
+- **P-002 Solution / Data / Software / Cloud Architect:** reviews technical decisions and curated knowledge.
+- **P-003 DevOps / DevSecOps Architect:** contributes engineering/security standards.
+- **P-004 Commercial / Pricing Specialist:** reviews effort inputs and pricing rules.
+- **P-005 Proposal Reviewer / Approver:** validates completeness and consistency.
+- **P-006 Knowledge Curator:** publishes governed policies, patterns, reference architectures and precedents.
 
-1. Conversational creation of an opportunity.
-2. Upload and analysis of one RFP/RFI-style document.
-3. Extraction and classification of requirements.
-4. Explicit known / unknown / assumed status.
-5. Clarification questions for missing material information.
-6. Persistent Deal Spec.
-7. Retrieval of mock/demo precedents from a knowledge base.
-8. Retrieval of governed demo architecture policies/patterns.
-9. Architecture proposal with rationale and references.
-10. WBS / role / FTE / hour estimation.
-11. Deterministic demo cost/price calculation.
-12. Independent validation of consistency and missing evidence.
-13. Generation of at least one proposal artifact.
-14. Human approval before final proposal-ready state.
-15. Basic trace/evidence log for important decisions.
+## 4. User stories
 
-## 4. Out of scope — FAST DEMO
+### Opportunity and RFP
 
-- production CRM integration;
-- enterprise ERP integration;
-- production rate-card system integration;
-- real confidential customer data;
-- automated binding commercial commitments;
-- automatic sending of proposals to clients;
-- production-grade legal review;
-- full identity federation / enterprise SSO;
-- full private networking topology;
-- full GraphRAG / enterprise knowledge graph;
-- autonomous final approval;
-- full delivery actuals integration;
-- all commercial document formats.
+**US-001 — Conversational opportunity**  
+As a pre-sales user, I want to describe an opportunity conversationally so that the system structures the context and asks only for material missing information.
 
-## 5. Personas
+**US-002 — Upload RFP**  
+As a pre-sales user, I want to upload an RFP so that it is first stored in the controlled GCS input zone and then processed into traceable requirements.
 
-### P-001 — Sales / Pre-sales
-Needs to initiate and progress an opportunity quickly.
+**US-003 — Inspect extracted requirements**  
+As an architect, I want to see each extracted requirement with its source locator, confidence/status and classification so that I can verify what the client actually requested.
 
-### P-002 — Architect
-Needs reliable context, reusable standards and evidence to create solution decisions.
+**US-004 — Clarification loop**  
+As a pre-sales user, I want the platform to identify unknown, ambiguous or contradictory requirements and ask clarification questions so that missing information is not invented.
 
-### P-003 — Commercial / Pricing specialist
-Needs effort inputs and deterministic calculation rules.
+### Knowledge and GraphRAG
 
-### P-004 — Proposal reviewer / approver
-Needs completeness, consistency and traceability before approval.
+**US-005 — Curate architecture knowledge**  
+As a knowledge curator, I want to place approved architecture policies, patterns and reference material into a controlled GCS input area so that the ingestion pipeline can version, chunk, index and graph them.
 
-### P-005 — Knowledge curator
-Maintains approved architecture patterns, standards or reference content.
+**US-006 — Find precedents**  
+As an architect, I want to retrieve similar historical proposals and lessons learned using semantic similarity plus graph relationships so that prior evidence can accelerate a new solution.
 
-## 6. Critical user stories
-
-### US-001 — Start opportunity conversationally
-As a pre-sales user, I want to describe an opportunity conversationally so that the platform structures the available context and asks for missing information.
-
-### US-002 — Upload RFP
-As a pre-sales user, I want to upload an RFP so that requirements are extracted, classified and traced to their source.
-
-### US-003 — Produce traceable architecture
-As an architect, I want the system to combine requirements, approved architecture knowledge and precedents so that I can review a proposed solution with explicit rationale.
-
-### US-004 — Estimate effort and price
-As a commercial team member, I want approved scope/design to be converted into effort and a deterministic pricing result so that the basis of the proposal is transparent.
-
-### US-005 — Validate and generate proposal
-As a reviewer, I want the system to detect gaps and inconsistencies before generating the proposal artifact so that I can approve an evidence-backed package.
-
-## 7. Functional requirements
-
-### Intake / RFP
-
-**FR-001** The system shall allow a user to create a new deal by conversation.
-
-**FR-002** The system shall allow a user to upload an RFP/RFI-style document supported by the demo parser.
-
-**FR-003** The system shall extract candidate requirements from the uploaded document.
-
-**FR-004** The system shall classify requirements at minimum into business, functional, non-functional, security, architecture, commercial and delivery categories where applicable.
-
-**FR-005** The system shall preserve a source reference for extracted RFP requirements.
-
-**FR-006** The system shall identify missing or ambiguous material information and generate clarification questions.
-
-### Deal Spec
-
-**FR-007** The system shall maintain one canonical Deal Spec per opportunity.
-
-**FR-008** The Deal Spec shall distinguish confirmed, assumed, unknown and derived information.
-
-**FR-009** Specialist outputs shall update or reference the Deal Spec rather than create independent conflicting state.
-
-### Knowledge / precedents
-
-**FR-010** The system shall retrieve relevant historical/demo precedents using semantic and/or metadata retrieval.
-
-**FR-011** Retrieved precedent evidence shall expose its source identifier and relevant metadata.
-
-**FR-012** The system shall retrieve approved demo architecture policies/patterns separately from historical proposal evidence.
+**US-007 — Trace retrieved evidence**  
+As a reviewer, I want every retrieved evidence item to retain document, chunk and relationship provenance so that recommendations can be audited.
 
 ### Architecture
 
-**FR-013** The Architect Agent shall use current requirements, governed architecture knowledge and relevant precedents as distinct evidence classes.
+**US-008 — Generate traceable architecture proposal**  
+As an architect, I want the Architect Agent to combine current requirements, governed architecture knowledge and historical precedents so that it can propose a solution with explicit rationale and references.
 
-**FR-014** The Architect Agent shall ask for clarification when a material design decision lacks sufficient information.
+**US-009 — Compare alternatives**  
+As an architect, I want material design alternatives and trade-offs to be compared so that the final decision is not presented as an unexplained single answer.
 
-**FR-015** The Architect Agent shall provide at least one proposed technical solution with rationale, assumptions, trade-offs and cited evidence.
+**US-010 — Stop on critical unknowns**  
+As an architect, I want the agent to stop and ask for missing critical information when a design decision cannot responsibly be closed.
 
-**FR-016** Material architecture decisions shall be recorded in a structured decision form / ADR-like record.
+### Estimation and pricing
 
-### Estimation / pricing
+**US-011 — Build WBS and effort estimate**  
+As a solution team member, I want the approved architecture to produce a structured WBS with roles, hours/FTE, dependencies and estimation rationale.
 
-**FR-017** The Estimator Agent shall generate a WBS or activity list linked to the proposed solution.
+**US-012 — Calculate deterministic economics**  
+As a pricing specialist, I want the estimate to be converted into cost, price and margin using versioned business rules so that the result is reproducible.
 
-**FR-018** The Estimator Agent shall propose roles, FTE/hours and duration assumptions.
+### Validation and artifacts
 
-**FR-019** The estimate shall identify the precedent, rule or assumption used for material effort values.
+**US-013 — Validate proposal readiness**  
+As a reviewer, I want an independent validator to detect unresolved requirements, unsupported architecture decisions and inconsistencies across scope, WBS and pricing.
 
-**FR-020** Pricing shall be calculated by a deterministic tool from structured effort and demo commercial rules.
+**US-014 — Generate proposal artifacts**  
+As a proposal user, I want technical/economic artifacts generated from the same approved Deal Spec version so that values remain consistent.
 
-**FR-021** The pricing result shall expose calculation inputs and outputs.
+**US-015 — Human approval**  
+As an accountable approver, I want to approve, reject or accept exceptions before a deal becomes proposal-ready.
 
-### Validation / artifacts
+## 5. Functional requirements
 
-**FR-022** The Validator Agent shall evaluate completeness, evidence traceability and cross-artifact consistency.
+### Intake / source documents
 
-**FR-023** The validator shall identify unresolved critical issues before proposal-ready status.
+**FR-001** The system shall create a deal from a conversational input.
 
-**FR-024** The system shall generate at least one proposal artifact from the approved Deal Spec.
+**FR-002** The system shall accept supported document uploads through the application UI/API.
 
-**FR-025** The generated artifact shall not silently override approved Deal Spec values.
+**FR-003** Every uploaded source shall be persisted to the configured **GCS input zone before any parsing or chunking begins**.
 
-### Approval
+**FR-004** The system shall record `gcs_uri`, object generation/version, document ID, upload timestamp and source classification.
 
-**FR-026** The system shall require explicit human approval before changing a deal to PROPOSAL_READY.
+**FR-005** The ingestion service shall process documents only from an approved GCS input URI/prefix.
 
-**FR-027** Approval shall record actor, timestamp, decision and relevant validation summary in demo state.
+**FR-006** The parser shall normalize supported document content while preserving source locators such as section/page/paragraph where possible.
 
-## 8. Business rules
+**FR-007** The Intake Agent shall extract and classify candidate requirements.
 
-**BR-001** Missing critical information must be surfaced as unknown or assumed; it must not be silently invented.
+**FR-008** Extracted requirements shall retain source evidence and distinguish `CONFIRMED`, `ASSUMED`, `UNKNOWN` and `DERIVED` states.
 
-**BR-002** Historical prices and effort are references, not authoritative current-deal values.
+**FR-009** The system shall generate clarification questions for material gaps, ambiguity or contradictions.
 
-**BR-003** Deterministic commercial calculations must run through a tool/rule function, not free-form LLM arithmetic.
+### Chunking and ingestion
 
-**BR-004** Architecture recommendations must reference at least one current requirement and, when available, an approved policy/pattern or explicit precedent.
+**FR-010** The system shall implement structure-aware semantic chunking over normalized documents read from GCS input.
 
-**BR-005** A proposal cannot become PROPOSAL_READY while critical validator findings remain unresolved unless a human explicitly accepts the exception.
+**FR-011** Chunking shall preserve section boundaries and identifiers where available.
 
-**BR-006** Human approval remains authoritative for final proposal readiness.
+**FR-012** Each chunk shall persist provenance including source GCS object/version, document ID, locator, knowledge domain, chunker version and content hash.
 
-**BR-007** Every generated artifact uses the same canonical Deal Spec version.
+**FR-013** Chunk size and overlap shall be configurable rather than hard-coded.
 
-## 9. Logical data model
+**FR-014** Re-processing the same unchanged source with the same chunker version shall produce reproducible chunk identities or equivalent deterministic evidence.
 
-```text
-User
- └──< Deal
-       ├──< SourceDocument
-       │     └──< SourceFragment
-       ├──< Requirement
-       ├──< Clarification
-       ├──< Assumption
-       ├──< EvidenceReference
-       ├──< Precedent
-       ├──< ArchitectureDecision
-       ├──  ArchitectureSolution
-       ├──< WorkItem / WBSItem
-       ├──< EffortEstimate
-       ├──  PricingCalculation
-       ├──< ValidationFinding
-       ├──< Artifact
-       └──< Approval
+**FR-015** Chunk artifacts shall be persisted before embeddings/index generation.
+
+### Embeddings / vector retrieval
+
+**FR-016** The system shall generate embeddings for eligible chunks using a configured embedding model.
+
+**FR-017** Embedding/index artifacts for FAST DEMO shall be persisted in GCS through the Vector Store adapter.
+
+**FR-018** The system shall support metadata-filtered vector similarity retrieval by knowledge domain.
+
+### Knowledge graph / GraphRAG
+
+**FR-019** The ingestion pipeline shall extract configured entity and relationship types from eligible chunks.
+
+**FR-020** Graph nodes and edges shall retain references to supporting chunks/source evidence.
+
+**FR-021** Graph artifacts for FAST DEMO shall be persisted in GCS through the Graph Store adapter.
+
+**FR-022** GraphRAG retrieval shall combine vector candidate retrieval and bounded graph traversal.
+
+**FR-023** Retrieval shall rerank evidence using relevance and at least source authority/status metadata.
+
+**FR-024** Retrieval results shall return evidence packets containing source document, chunk IDs and graph relationships used.
+
+**FR-025** Architecture knowledge and historical precedents shall remain separately filterable knowledge domains.
+
+### Deal Spec
+
+**FR-026** The system shall maintain one canonical, versioned Deal Spec per opportunity.
+
+**FR-027** Specialist outputs shall update the Deal Spec through explicit application services/tools.
+
+**FR-028** Deal Spec mutations shall record actor/agent, timestamp, changed fields and reason/evidence where applicable.
+
+### Architect Agent
+
+**FR-029** The Architect Agent shall consume current requirements, governed architecture knowledge and relevant precedents as distinguishable evidence classes.
+
+**FR-030** The Architect Agent shall ask for clarification if a configured critical unknown prevents a material decision.
+
+**FR-031** The Architect Agent shall produce a proposed solution, assumptions, alternatives where material, trade-offs and cited evidence.
+
+**FR-032** Material architecture decisions shall be stored as structured ADR-like records linked to requirements and evidence.
+
+### Estimation
+
+**FR-033** The Estimator Agent shall generate a WBS linked to the selected architecture/components.
+
+**FR-034** The estimate shall contain roles, hours/FTE, duration assumptions, dependencies and uncertainty/range where appropriate.
+
+**FR-035** Material effort values shall identify their basis: precedent, estimation rule, expert assumption or combination.
+
+### Pricing
+
+**FR-036** Pricing shall be computed through a deterministic Pricing Service/tool.
+
+**FR-037** Pricing inputs shall include structured effort plus configured rate card/business-unit variables.
+
+**FR-038** The pricing result shall persist input snapshot, rule/rate-card version, cost, price and margin.
+
+**FR-039** An LLM shall not override the authoritative deterministic pricing result.
+
+### Validation / approval / artifacts
+
+**FR-040** The Validator Agent shall evaluate requirement completeness, source traceability, architecture evidence, estimate basis, pricing integrity and cross-section consistency.
+
+**FR-041** Blocking findings shall prevent clean transition to `PROPOSAL_READY` unless a human explicitly accepts the exception.
+
+**FR-042** Artifact generation shall use one explicit Deal Spec version.
+
+**FR-043** The system shall generate at least one technical proposal artifact and one economic/pricing summary for the demo.
+
+**FR-044** The system shall support human `APPROVE`, `REJECT` and `APPROVE_WITH_EXCEPTION` decisions.
+
+**FR-045** The approval record shall persist actor, timestamp, Deal Spec version and accepted exceptions.
+
+### Observability / evidence
+
+**FR-046** The system shall log correlation/deal ID, invoked agent/tool and operation outcome.
+
+**FR-047** Knowledge operations shall log source GCS URI/version, chunker version, retrieval evidence IDs and GraphRAG relationships used where applicable.
+
+**FR-048** Agent outputs shall record model/instruction version sufficient for demo reproducibility/evaluation.
+
+## 6. Non-functional requirements
+
+**NFR-001 — Traceability**  
+Material requirements, architecture decisions, retrieved precedents and generated claims must be traceable to evidence.
+
+**NFR-002 — Determinism for commercial calculation**  
+Given identical pricing inputs and rule versions, pricing outputs must be identical.
+
+**NFR-003 — Replaceability**  
+Vector, graph, LLM, persistence and parser technologies shall be isolated sufficiently to allow adapter replacement without rewriting core use cases.
+
+**NFR-004 — Security / least privilege**  
+Runtime service accounts shall have only the minimum required GCP permissions.
+
+**NFR-005 — Data ingress control**  
+Chunking/ingestion shall reject source references outside the configured GCS input location.
+
+**NFR-006 — Confidentiality**  
+Raw document bodies shall not be unnecessarily emitted into application logs.
+
+**NFR-007 — Auditability**  
+Deal lifecycle transitions and human approvals shall be recorded.
+
+**NFR-008 — Maintainability**  
+The codebase shall follow feature-oriented Hexagonal Slice boundaries from DevPattern.
+
+**NFR-009 — Testability**  
+Core business rules and retrieval orchestration shall be testable without live external services through replaceable adapters/fakes where practical.
+
+**NFR-010 — Observability**  
+The demo shall expose structured logs for ingestion, retrieval, agent/tool calls and validation outcomes.
+
+**NFR-011 — Performance target**  
+For the controlled demo corpus, a normal conversational/retrieval response should target an interactive experience; exact SLO is measured during FAST DEMO rather than prematurely fixed.
+
+**NFR-012 — Cost discipline**  
+The FAST DEMO shall prefer serverless/scale-to-zero managed components and avoid always-on infrastructure unless evidence justifies it.
+
+**NFR-013 — Provenance durability**  
+A chunk/evidence reference shall retain enough identity to resolve the exact source object generation used during ingestion.
+
+**NFR-014 — Accessibility/usability baseline**  
+The main UI shall expose system status, uncertainty, citations/evidence and approval actions clearly, following the DevPattern usability baseline.
+
+## 7. Business rules
+
+**BR-001** Missing critical information must be surfaced; it must not be silently invented.
+
+**BR-002** Historical price/effort are evidence, not authoritative current values.
+
+**BR-003** Authoritative pricing is deterministic.
+
+**BR-004** Architecture decisions must reference at least one current requirement and supporting governed evidence when available.
+
+**BR-005** The only valid document input to chunking is an object stored in the configured GCS input zone.
+
+**BR-006** Generated proposal artifacts may not silently change approved scope, duration or price.
+
+**BR-007** A blocking validator finding prevents clean proposal-ready status unless accepted explicitly by a human.
+
+**BR-008** Architecture policies with `draft/deprecated/expired` status cannot be treated as authoritative approved policy.
+
+**BR-009** Graph traversal must be bounded to prevent uncontrolled context expansion.
+
+**BR-010** Every GraphRAG answer packet must retain provenance; unsupported retrieval output is not considered evidence.
+
+## 8. Logical data model
+
+```mermaid
+classDiagram
+    User "1" --> "*" Deal
+    Deal "1" --> "*" SourceDocument
+    SourceDocument "1" --> "*" Chunk
+    Chunk "*" --> "*" KnowledgeEntity
+    KnowledgeEntity "*" --> "*" KnowledgeEntity : relationship
+    Deal "1" --> "*" Requirement
+    Requirement "*" --> "*" EvidenceReference
+    Deal "1" --> "*" ArchitectureDecision
+    ArchitectureDecision "*" --> "*" EvidenceReference
+    Deal "1" --> "*" WBSItem
+    Deal "1" --> "1" PricingCalculation
+    Deal "1" --> "*" ValidationFinding
+    Deal "1" --> "*" Artifact
+    Deal "1" --> "*" Approval
 ```
 
-Minimum Deal state:
+## 9. Main sequence
 
-```text
-DRAFT
-→ DISCOVERY
-→ DESIGN
-→ ESTIMATION
-→ VALIDATION
-→ PROPOSAL_READY
-→ WON / LOST
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant UI as Web UI
+    participant API as Cloud Run
+    participant GCS as GCS Input
+    participant I as Ingestion
+    participant R as GraphRAG
+    participant O as Orchestrator
+    participant A as Architect
+    participant D as Deal Spec
+
+    U->>UI: Upload RFP
+    UI->>API: Upload
+    API->>GCS: Persist source object
+    GCS-->>API: gs:// URI + generation
+    API->>I: Ingest GCS object
+    I->>I: Parse + normalize + chunk
+    I->>I: Embed + build vector/graph artifacts
+    I-->>R: Knowledge available
+    O->>R: Retrieve evidence
+    R-->>O: Evidence packet + provenance
+    O->>A: Analyze opportunity
+    A->>R: Architecture/precedent query
+    R-->>A: GraphRAG evidence
+    A->>D: Record traceable architecture decisions
 ```
 
-## 10. Agentic extension
+## 10. Acceptance criteria
 
-### Orchestrator contract
+### AC-001 — Controlled GCS ingestion
+Given a supported file uploaded through the UI
+When ingestion starts
+Then the raw document exists in the configured GCS input path
+And the ingestion request references that GCS object and generation
+And parsing/chunking does not start from a local/browser path.
 
-The orchestrator:
-- owns lifecycle coordination;
-- reads/writes only through explicit Deal Spec services/tools;
-- delegates specialist analysis;
-- does not bypass required validation/approval gates;
-- communicates missing information to the user.
+### AC-002 — Chunk provenance
+Given a document in GCS input
+When chunking completes
+Then every chunk has a chunk ID, document ID, GCS source URI/version, locator, hash and chunker version
+And the chunk can be traced back to its source.
 
-### Specialist contracts
+### AC-003 — GraphRAG index construction
+Given curated architecture and precedent documents in GCS input
+When ingestion completes
+Then vector artifacts are created
+And graph nodes/edges are created
+And graph/vector artifacts preserve references to supporting chunks.
 
-Initial logical specialists:
-- Intake Agent;
-- Knowledge / Precedent Agent;
-- Architect Agent;
-- Estimator Agent;
-- Validator Agent;
-- Artifact Agent.
+### AC-004 — Hybrid retrieval
+Given a query requiring both semantic similarity and a known relationship
+When GraphRAG retrieval runs
+Then vector candidates and graph candidates are considered
+And the response evidence packet exposes the supporting chunks and relationships.
 
-Pricing may be exposed as an agent-facing deterministic tool rather than a fully autonomous agent in FAST DEMO.
+### AC-005 — RFP extraction
+Given the Golden Deal RFP in GCS input
+When the Intake Agent analyzes it
+Then candidate requirements are extracted and classified
+And source locators are retained
+And intentionally missing/ambiguous critical information is surfaced as clarification questions.
 
-### Knowledge strategy
-
-Separate indexes / collections or metadata classes for:
-1. current opportunity sources;
-2. reusable architecture knowledge;
-3. historical precedents.
-
-### Context strategy
-
-The active Deal Spec is the primary working context. Retrieved knowledge should be scoped to the current task and references preserved.
-
-### Memory strategy
-
-FAST DEMO does not rely on unbounded conversational memory as authoritative business state. Durable deal state is stored explicitly.
-
-### Human approval
-
-Required before PROPOSAL_READY.
-
-### Evals
-
-At minimum:
-- RFP requirement extraction sample;
-- source citation correctness sample;
-- architecture evidence adherence sample;
-- estimator schema completeness;
-- validator detection of seeded inconsistency;
-- deterministic pricing regression test.
-
-## 11. Acceptance criteria — critical flow
-
-### AC-001 — RFP ingestion
-
-Given a supported RFP document
-When the user uploads it
-Then the system creates or updates a Deal Spec
-And extracts candidate requirements
-And preserves source references
-And identifies at least the intentionally omitted/ambiguous critical fields in the demo fixture.
-
-### AC-002 — Architecture traceability
-
+### AC-006 — Architecture traceability
 Given structured requirements and curated architecture knowledge
-When architecture analysis is requested
-Then the system proposes a solution
-And records assumptions
-And cites the evidence used for material decisions
-And asks for clarification instead of inventing a configured critical unknown.
+When architecture analysis runs
+Then the system proposes a solution with assumptions/trade-offs
+And every configured material decision references at least one requirement and evidence item
+And a critical unknown causes a clarification rather than fabrication.
 
-### AC-003 — Estimate and pricing
+### AC-007 — Estimation
+Given an approved architecture
+When estimation runs
+Then a structured WBS and role/hour estimate is produced
+And material estimate lines expose their basis.
 
-Given an approved demo architecture
-When estimation and pricing run
-Then a structured WBS/effort estimate is created
-And the deterministic pricing tool calculates cost and price
-And calculation inputs are inspectable.
+### AC-008 — Deterministic pricing
+Given an approved structured estimate and rate-card/rule version
+When pricing runs twice with identical inputs
+Then cost, price and margin are identical
+And the input/rule snapshot is inspectable.
 
-### AC-004 — Validation
-
-Given a Deal Spec with a seeded inconsistency
+### AC-009 — Validation gate
+Given a Deal Spec with a seeded blocking inconsistency
 When validation runs
-Then the system reports the inconsistency
-And prevents clean proposal-ready status until it is resolved or explicitly accepted.
+Then the issue is detected
+And clean transition to PROPOSAL_READY is prevented until resolved or accepted by a human.
 
-### AC-005 — Artifact consistency
-
+### AC-010 — Artifact consistency
 Given an approved Deal Spec version
-When a proposal artifact is generated
-Then the artifact uses the same approved scope, duration and price values
-And records the Deal Spec version used.
+When proposal artifacts are generated
+Then the technical proposal and pricing summary use the same approved scope, duration and price values
+And record the Deal Spec version used.
 
-## 12. Demo success metric
+### AC-011 — Approval
+Given no unresolved blocking finding or an explicitly accepted exception
+When an authorized demo user approves the package
+Then an Approval record is created
+And the deal transitions to PROPOSAL_READY.
 
-The demo passes when one representative opportunity can complete the critical flow end-to-end with:
+### AC-012 — Retrieval failure behavior
+Given no sufficiently relevant evidence
+When a specialist queries GraphRAG
+Then the system returns insufficient evidence rather than fabricating a precedent or policy.
 
-- uploaded RFP or conversational intake;
-- traceable structured requirements;
-- precedent retrieval;
-- architecture recommendation with evidence;
-- effort estimate;
-- deterministic price calculation;
-- validator result;
-- human approval;
-- generated proposal artifact.
+## 11. Initial evals
 
-## 13. Open decisions
+- requirement extraction against manually labeled Golden Deal RFP;
+- source-locator/citation correctness;
+- chunk provenance completeness;
+- retrieval precision for architecture policies;
+- GraphRAG relationship retrieval test;
+- grounded architecture decision coverage;
+- estimator schema completeness;
+- deterministic pricing regression;
+- validator seeded-inconsistency detection;
+- artifact cross-consistency.
 
-To be resolved before implementation expands:
+## 12. Construction sequence
 
-- exact frontend technology;
-- demo persistence choice: Cloud SQL vs simpler managed persistence where sufficient;
-- document storage and extraction implementation;
-- vector retrieval implementation;
-- target artifact format for first demo;
-- whether the first demo exposes all specialists explicitly in UI or keeps them behind one orchestrator;
-- exact pricing fixture and demo rate-card model;
-- authentication scope for FAST DEMO.
+```mermaid
+flowchart LR
+    S1[Sprint 1: foundation + GCS input] --> S2[Sprint 2: parser + chunking]
+    S2 --> S3[Sprint 3: embeddings + vector retrieval]
+    S3 --> S4[Sprint 4: graph extraction + GraphRAG]
+    S4 --> S5[Sprint 5: Intake + Architect]
+    S5 --> S6[Sprint 6: Estimator + Pricing]
+    S6 --> S7[Sprint 7: Validator + Artifacts + approval]
+    S7 --> DEMO[Golden Deal end-to-end evidence]
+```
+
+The implementation may compress these into fewer delivery iterations, but dependencies remain ordered.
+
+## 13. Definition of Ready for construction
+
+Construction may start when:
+
+- this SPEC is accepted as baseline;
+- architecture ports/adapters and GCP components are agreed;
+- one Golden Deal RFP is selected;
+- at least a minimal curated architecture corpus exists;
+- at least 3 representative historical/mock precedents exist;
+- a demo rate card/rule fixture exists;
+- acceptance/eval fixtures are defined.
+
+## 14. Explicit FAST DEMO exclusions
+
+- production CRM/ERP integration;
+- binding autonomous commercial commitments;
+- automatic external sending of proposals;
+- production legal approval;
+- enterprise SSO/private network topology unless required by environment;
+- full delivery actuals feedback;
+- production-grade high-availability vector/graph database.
+
+The FAST DEMO uses GCS-backed vector/graph artifacts through replaceable ports; a dedicated production vector/graph store is an evolution decision, not a hidden assumption.

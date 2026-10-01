@@ -1,196 +1,413 @@
-# Architecture — Solution Deal Agent FAST DEMO
+# Architecture — Solution Deal Agent
 
-Status: DRAFT  
+Status: BASELINE FOR CONSTRUCTION  
+Mode: FAST DEMO with evolution path to MVP/PRODUCT  
 Target cloud: Google Cloud Platform  
-Architecture mode: FAST DEMO / PA-SDD
+Method: PA-SDD / DevPattern
 
-## 1. Architecture objective
+## 1. Architectural intent
 
-Prove the end-to-end agentic deal flow on GCP using the simplest viable runtime while preserving clear contracts, traceability and deterministic boundaries.
+Solution Deal Agent is an agentic pre-sales platform that converts an opportunity, conversation or RFP into a traceable Deal Spec, technical solution, effort estimate, deterministic commercial calculation and proposal artifact.
 
-The FAST DEMO deliberately avoids distributed agent infrastructure unless required to prove the use case.
+The FAST DEMO must prove the business behavior with the fewest operational moving parts while preserving replaceable integration boundaries. Following DevPattern, the implementation uses feature-oriented slices and introduces ports/adapters where external dependencies, business rules, testing, security or future replacement justify them.
+
+The solution uses **GraphRAG from the first construction baseline**.
+
+> **Mandatory ingestion rule:** the input to the chunking pipeline is always an object already stored in a controlled Google Cloud Storage input zone. Chunking never reads directly from a browser upload, local file path or arbitrary external URL.
+
+The browser/API may receive a document, but the first durable action is to store it in the GCS input zone. Only then can ingestion, parsing, normalization and chunking begin.
 
 ## 2. Architecture principles
 
-1. Cloud Run remains the default runtime.
-2. Google ADK coordinates the conversational orchestrator and logical specialist agents.
-3. Vertex AI / Gemini provides language and reasoning capabilities.
-4. Durable business state is stored explicitly; conversation memory is not the authoritative deal record.
-5. Knowledge retrieval and deterministic calculations are exposed through explicit tools.
-6. Pricing calculations are deterministic.
-7. Architecture knowledge and historical proposal evidence remain logically separated.
-8. Human approval is explicit before proposal-ready state.
-9. All material decisions should retain evidence references.
-10. Multi-agent behavior may exist logically in one runtime for FAST DEMO.
+1. One canonical **Deal Spec** is authoritative business state.
+2. Agents orchestrate capabilities; critical business rules do not live only in prompts.
+3. GraphRAG combines semantic retrieval with relationship traversal.
+4. Source provenance is mandatory for material recommendations.
+5. **GCS input is the sole entry point to the chunking pipeline.**
+6. Chunking is explicit, versioned, reproducible and testable.
+7. Pricing is deterministic and isolated from LLM arithmetic.
+8. Human approval is required before `PROPOSAL_READY`.
+9. External technologies remain adapters behind explicit ports when isolation adds value.
+10. Cloud Run + Google ADK + Vertex AI/Gemini are the default runtime baseline.
+11. Every generated artifact derives from an approved Deal Spec version.
+12. Graph and vector persistence may evolve without changing core domain behavior.
 
-## 3. Logical architecture
+## 3. Context architecture
+
+```mermaid
+flowchart LR
+    USER[Sales / Presales / Architect] --> UI[Conversational Web UI]
+    UI --> SDA[Solution Deal Agent]
+
+    SDA --> RFP[RFP / Requirement Sources]
+    SDA --> KBASE[Architecture & Proposal Knowledge]
+    SDA --> RULES[Commercial Rules / Rate Cards]
+    SDA --> OUT[Proposal / Estimate / PCR / SOW]
+
+    ARCHUSR[Solution / Data / Software / DevSecOps Architects] --> KBASE
+    APPROVER[Human Reviewer / Approver] --> SDA
+```
+
+## 4. End-to-end logical architecture
 
 ```mermaid
 flowchart TB
-    U[User / Pre-sales / Architect] --> UI[Web UI]
-    UI --> API[Cloud Run - Agentic Application]
-
-    API --> ORCH[Deal Orchestrator - Google ADK]
+    U[User] --> FE[Web UI]
+    FE --> API[Cloud Run Application]
+    API --> ORCH[ADK Deal Orchestrator]
 
     ORCH --> INTAKE[Intake / RFP Agent]
-    ORCH --> KNOW[Precedent / Knowledge Agent]
+    ORCH --> KNOW[Knowledge / GraphRAG Agent]
     ORCH --> ARCH[Architect Agent]
     ORCH --> EST[Estimator Agent]
     ORCH --> VAL[Validator Agent]
     ORCH --> ART[Artifact Agent]
 
-    INTAKE --> DEAL[Deal Spec Tool]
-    KNOW --> RET[Knowledge Retrieval Tool]
-    ARCH --> RET
+    INTAKE --> DEAL[Deal Service]
     ARCH --> DEAL
     EST --> DEAL
-    EST --> PRICE[Deterministic Pricing Tool]
     VAL --> DEAL
     ART --> DEAL
 
-    RET --> KB1[(Architecture Knowledge)]
-    RET --> KB2[(Historical Precedents)]
-    INTAKE --> DOC[(Uploaded RFP / Source Documents)]
+    KNOW --> KR[GraphRAG Retrieval Service]
+    ARCH --> KR
+    EST --> KR
+    VAL --> KR
 
-    DEAL --> STATE[(Deal State Store)]
-    PRICE --> RULES[(Demo Rate Cards / Rules)]
+    KR --> VEC[Vector Store Port]
+    KR --> GRAPH[Graph Store Port]
+    VEC --> VADAPT[FAST DEMO Vector Adapter]
+    GRAPH --> GADAPT[FAST DEMO Graph Adapter]
+    VADAPT --> GCSV[(GCS vector-index / embeddings metadata)]
+    GADAPT --> GCSG[(GCS graph artifacts)]
 
-    ORCH --> VAI[Vertex AI / Gemini]
-    API --> LOG[Cloud Logging]
+    INTAKE --> DOC[Document Service]
+    DOC --> GCSI[(GCS input zone)]
+
+    EST --> PRICE[Deterministic Pricing Service]
+    PRICE --> RATE[(Demo rate cards / rules)]
+
+    DEAL --> STATE[(Deal Spec State Store)]
+    ORCH --> GEM[Vertex AI / Gemini]
+    API --> LOG[Cloud Logging / Evidence]
 ```
 
-## 4. GCP FAST DEMO component baseline
+## 5. Mandatory document ingestion contract
 
-### Cloud Run
+All knowledge sources, RFPs and supporting documents follow the same controlled entry contract.
 
-Hosts the frontend/API and agent runtime as one deployable service initially, unless implementation evidence justifies separation.
+```mermaid
+flowchart LR
+    SRC[User upload / curated source] --> UPLOAD[Upload API]
+    UPLOAD --> GCSI[(Cloud Storage INPUT)]
+    GCSI --> INGEST[Ingestion worker / service]
+    INGEST --> PARSE[Parser / normalizer]
+    PARSE --> CHUNK[Chunking pipeline]
+```
 
-### Google ADK
+### Rule
 
-Defines:
-- Deal Orchestrator;
-- logical specialist agents;
-- tool invocation;
-- delegation rules;
-- agent behavior contracts.
+`GCS INPUT -> parse/normalize -> chunk`
 
-### Vertex AI / Gemini
+Not allowed:
 
-Used for:
-- requirement interpretation;
-- clarification generation;
-- architecture reasoning;
-- semantic comparison;
-- estimation reasoning;
-- validation reasoning;
-- artifact drafting.
+`browser/local file -> chunk`
 
-### Document storage
+The GCS object URI and generation/version become part of the ingestion evidence.
 
-A lightweight GCP-backed storage mechanism will hold uploaded RFP/source documents for the demo. Final selection should favor the simplest managed option that preserves source identity and retrievability.
+## 6. GraphRAG ingestion pipeline
 
-### Knowledge retrieval
+Knowledge namespaces:
 
-FAST DEMO needs two logically distinct evidence domains:
+- `architecture`: policies, standards, reference architectures, design/development patterns;
+- `precedents`: historical technical/economic proposals, WBS, assumptions, lessons learned;
+- `opportunity`: current RFP and supporting client material.
 
-1. governed architecture knowledge;
-2. historical proposal / precedent knowledge.
+```mermaid
+flowchart LR
+    GCSI[(GCS INPUT)] --> READ[Read immutable object version]
+    READ --> PARSE[Parse + normalize]
+    PARSE --> STRUCT[Detect document structure]
+    STRUCT --> CHUNK[Semantic + structural chunking]
+    CHUNK --> META[Chunk metadata + provenance]
 
-Retrieval can start with metadata + semantic/vector search. GraphRAG is explicitly deferred unless the demo exposes a relationship query that cannot be adequately handled by the simpler model.
+    CHUNK --> EMB[Vertex AI Embeddings]
+    EMB --> IDX[Build / update vector index]
+    META --> IDX
+    IDX --> VSTORE[(GCS vector-index)]
 
-### Deal state store
+    CHUNK --> ENT[Entity + relationship extraction]
+    META --> ENT
+    ENT --> GRAPH[Build / update knowledge graph]
+    GRAPH --> GSTORE[(GCS graph artifacts)]
 
-Stores the canonical Deal Spec and lifecycle state. The exact storage component is an implementation decision still open. The data model must support structured relationships and versioned deal state.
+    VSTORE --> RET[Hybrid GraphRAG Retriever]
+    GSTORE --> RET
+    RET --> CTX[Evidence-ranked context]
+    CTX --> AGENT[Specialist Agent]
+```
 
-### Pricing tool
+### 6.1 Chunking strategy
 
-A deterministic function/tool receives structured effort plus configured commercial variables and returns a reproducible calculation.
+Chunking is not a fixed split-by-character operation. The baseline uses **structure-aware semantic chunking**:
 
-### Logging / evidence
+1. read source only from the GCS input object/version;
+2. normalize text while preserving locators;
+3. detect title, section, subsection, table, list and paragraph boundaries;
+4. preserve RFP requirement IDs, policy IDs and architecture references;
+5. create chunks by semantic unit;
+6. enforce configurable max token size after structural segmentation;
+7. apply limited overlap only when needed for continuity;
+8. attach provenance metadata to each chunk;
+9. calculate a content hash;
+10. persist chunks before embedding/index generation.
 
-Cloud Logging captures basic runtime events. The application should additionally emit structured decision/evidence records where material.
+Minimum chunk metadata:
 
-## 5. Runtime boundary
+```yaml
+chunk_id: string
+document_id: string
+source_gcs_uri: gs://bucket/input/...
+source_generation: string
+knowledge_domain: architecture | precedent | opportunity
+source_type: rfp | proposal | policy | pattern | reference_architecture | other
+section_path: string
+page_or_locator: string
+text_hash: string
+chunker_version: string
+embedding_model: string
+owner: string
+status: approved | draft | historical
+confidentiality: demo | internal | restricted
+valid_from: date|null
+valid_to: date|null
+```
 
-For FAST DEMO:
+## 7. Initial knowledge graph model
+
+```mermaid
+classDiagram
+    Deal --> Requirement
+    Deal --> ArchitectureDecision
+    Deal --> Estimate
+    Requirement --> ArchitectureDecision : drives
+    ArchitecturePolicy --> ArchitectureDecision : constrains
+    ReferencePattern --> ArchitectureDecision : supports
+    Precedent --> ArchitectureDecision : evidences
+    ArchitectureDecision --> Component : selects
+    Component --> WBSItem : requires
+    WBSItem --> Role : performed_by
+    Estimate --> WBSItem : estimates
+    SourceDocument --> Chunk : contains
+    Chunk --> Requirement : evidences
+    Chunk --> ArchitecturePolicy : describes
+    Chunk --> Precedent : describes
+```
+
+Initial relationship types:
+
+- `REQUIRES`
+- `CONSTRAINS`
+- `SUPPORTED_BY`
+- `DERIVED_FROM`
+- `SIMILAR_TO`
+- `IMPLEMENTS`
+- `USES_COMPONENT`
+- `ESTIMATED_BY`
+- `EVIDENCED_BY`
+- `APPLIES_TO`
+
+## 8. GraphRAG retrieval flow
+
+```mermaid
+flowchart LR
+    Q[Agent query] --> CLS[Task/domain classification]
+    CLS --> F[Metadata filters]
+    F --> VS[Vector similarity search]
+    Q --> E[Entity extraction]
+    E --> GT[Bounded graph traversal]
+    VS --> MERGE[Merge candidates]
+    GT --> MERGE
+    MERGE --> RR[Rerank: relevance + authority + status + recency + deal fit]
+    RR --> EV[Evidence packet + provenance]
+```
+
+The evidence packet must return source IDs, chunk IDs and relevant graph relationships, not only generated prose.
+
+## 9. GCP component baseline
+
+| Component | Purpose |
+|---|---|
+| Cloud Run | Web/API and ADK agent runtime |
+| Google ADK | Orchestrator and logical specialist agents |
+| Vertex AI / Gemini | Extraction, reasoning, drafting and validation |
+| Vertex AI Embeddings | Embedding generation |
+| Cloud Storage — input | Controlled entry point for all documents before ingestion/chunking |
+| Cloud Storage — derived | Normalized text, chunks, embedding/index artifacts, graph artifacts, generated files, evidence |
+| Cloud SQL PostgreSQL | Preferred structured persistence for Deal Spec, lifecycle, approvals and metadata requiring transactional consistency |
+| Cloud Logging | Runtime and evidence logs |
+| Secret Manager | Secrets and protected configuration |
+| Artifact Registry | Container image repository |
+| Cloud Build | Repeatable build/deployment |
+
+### FAST DEMO storage decision
+
+For the demo, vector index artifacts and graph artifacts are persisted in GCS and loaded through adapters at runtime. The interfaces intentionally allow migration later to a dedicated managed vector/graph technology without changing the knowledge use cases.
+
+### Suggested GCS layout
 
 ```text
-One Cloud Run application
-      ↓
-One ADK orchestration boundary
-      ↓
-Multiple logical specialist agents
-      ↓
-Explicit tools / knowledge stores
+gs://solution-deal-agent-demo/
+├── input/
+│   ├── architecture/
+│   ├── precedents/
+│   └── opportunities/
+├── normalized/
+├── chunks/
+├── embeddings/
+├── vector-index/
+│   ├── architecture/
+│   ├── precedents/
+│   └── opportunities/
+├── graph/
+│   ├── nodes.jsonl
+│   ├── edges.jsonl
+│   └── graph_manifest.json
+├── generated-artifacts/
+└── evidence/
 ```
 
-This preserves the business concept of specialist agents without paying the complexity cost of distributed runtimes too early.
+## 10. Software architecture — Hexagonal Slice
 
-## 6. Suggested first tool contracts
+The project adopts DevPattern's **Hexagonal Slice Architecture** because it has meaningful domain logic and multiple replaceable external dependencies: LLM, document parser, embeddings, vector store, graph store, persistence, commercial rules and artifact generators.
 
-- `deal.create`
-- `deal.get`
-- `deal.update_section`
-- `deal.add_requirement`
-- `deal.add_assumption`
-- `deal.add_architecture_decision`
-- `deal.add_estimate`
-- `deal.add_validation_finding`
-- `knowledge.search_architecture`
-- `knowledge.search_precedents`
-- `document.get_source_fragment`
-- `pricing.calculate`
-- `artifact.generate`
-- `approval.record`
+```mermaid
+flowchart LR
+    DRIVE[UI / API / ADK Agent] --> APP[Application Use Case]
+    APP --> DOMAIN[Domain Rules]
+    APP --> PORTS[Outbound Ports]
+    PORTS --> ADAPT[Driven Adapters]
+    ADAPT --> EXT[GCS / Vertex AI / Cloud SQL / Gemini]
+```
 
-## 7. Security boundary for demo
+Recommended source structure:
 
-Minimum controls:
+```text
+src/
+├── features/
+│   ├── intake/
+│   ├── knowledge/
+│   │   ├── application/
+│   │   ├── graphrag/
+│   │   ├── ports/
+│   │   ├── adapters/
+│   │   └── evals/
+│   ├── architecture_design/
+│   ├── estimation/
+│   ├── pricing/
+│   ├── validation/
+│   ├── artifacts/
+│   └── approvals/
+├── shared/
+│   ├── domain/
+│   ├── contracts/
+│   ├── observability/
+│   └── config/
+└── app/
+    ├── api.py
+    └── adk_runtime.py
+```
 
-- dedicated runtime service account;
-- least-privilege access to storage/state;
-- Secret Manager for secrets if any are needed;
-- no real confidential customer documents in baseline demo data;
-- no hard-coded credentials;
-- explicit approval before proposal-ready state;
-- logging that avoids unnecessary sensitive document content.
+Required ports:
 
-## 8. Evolution to MVP
+- `DocumentStorePort`
+- `DocumentParserPort`
+- `ChunkRepositoryPort`
+- `EmbeddingPort`
+- `VectorStorePort`
+- `GraphStorePort`
+- `DealRepositoryPort`
+- `LLMPort`
+- `PricingRulesPort`
+- `ArtifactStorePort`
+- `ApprovalRepositoryPort`
 
-Add when justified:
+## 11. Deal Spec lifecycle
 
-- frontend/API separation;
-- dedicated persistence tier;
-- production document ingestion pipeline;
-- stronger identity / SSO;
-- separate service accounts by capability;
-- richer observability and traces;
-- eval datasets and automated regression gates;
-- CI/CD with Cloud Build + Artifact Registry;
-- enterprise APIs;
-- stronger tool authorization;
-- durable approval workflow;
-- semantic metadata governance;
-- selected multi-agent runtime separation where ownership/security/scale justifies it.
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> DISCOVERY
+    DISCOVERY --> DESIGN
+    DESIGN --> ESTIMATION
+    ESTIMATION --> VALIDATION
+    VALIDATION --> PROPOSAL_READY : human approval
+    PROPOSAL_READY --> WON
+    PROPOSAL_READY --> LOST
+    VALIDATION --> DESIGN : architecture finding
+    VALIDATION --> ESTIMATION : estimation finding
+```
 
-## 9. Evolution to PRODUCT
+Every mutation records deal ID, Deal Spec version, actor/agent, timestamp, changed fields, reason and evidence where applicable.
 
-Potential future capabilities, only when evidence justifies them:
+## 12. Deterministic pricing boundary
 
-- private ingress / VPC connectivity / PSC;
-- asynchronous workloads through Pub/Sub/Eventarc;
-- Cloud Run Jobs for batch/evals;
-- worker pools for continuous background workloads;
-- enterprise CRM/pricing integration;
-- knowledge graph / GraphRAG;
-- AgentOps / FinOps;
-- formal evidence packs;
-- promotion/rollback gates;
-- delivery actuals feedback loop;
-- Won/Lost analytics;
-- policy-aware runtime permissions;
-- MCP and A2A interoperability where cross-platform integration creates clear value.
+```mermaid
+flowchart LR
+    E[Approved Effort] --> P[Pricing Service]
+    R[Rate Card Version] --> P
+    B[BU / Geography / Currency / Margin Rules] --> P
+    P --> C[Cost]
+    P --> PR[Client Price]
+    P --> M[Margin]
+    P --> SNAP[Calculation Snapshot]
+```
 
-## 10. Key architectural decision
+The LLM may explain or request missing data but must not produce the authoritative numeric result.
 
-> The FAST DEMO will prove a multi-agent business experience while keeping the deployment architecture intentionally simple: one orchestrated ADK application on Cloud Run, explicit tools, structured Deal Spec, separated knowledge domains and deterministic pricing.
+## 13. Security and governance baseline
+
+- dedicated Cloud Run service account;
+- least privilege IAM;
+- controlled GCS input prefix/bucket;
+- object version/provenance captured before processing;
+- no secrets in source code;
+- Secret Manager for secrets;
+- document/chunk confidentiality metadata;
+- logs avoid unnecessary raw sensitive content;
+- human approval for proposal-ready state;
+- provenance for material architecture/commercial decisions.
+
+## 14. Observability and evidence
+
+Capture at minimum:
+
+- deal/correlation ID;
+- source GCS URI + generation;
+- ingestion/chunker version;
+- agent and tool invoked;
+- retrieval query;
+- evidence IDs;
+- graph relationships used;
+- model and prompt/instruction version;
+- latency;
+- validation result;
+- approval decision.
+
+## 15. Construction rule
+
+The first implementation must prove this chain before expanding scope:
+
+```text
+GCS INPUT
+→ Parse / Normalize
+→ Chunk
+→ Embed
+→ Build vector index
+→ Extract graph
+→ GraphRAG retrieval
+→ Deal Spec / Agent reasoning
+→ Traceable output
+```
+
+This pipeline is a prerequisite for the Architect Agent because its recommendations must be grounded in governed architecture knowledge and precedents.
