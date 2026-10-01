@@ -1,357 +1,205 @@
 # Solution Deal Agent
 
-> Agentic Deal Intelligence Platform for turning opportunities, RFPs, requirements and reusable enterprise knowledge into traceable technical solutions, effort estimates, commercial outputs and proposal artifacts.
+> Agentic Deal Intelligence Platform for turning opportunities, RFPs, requirements and reusable enterprise knowledge into traceable technical solutions, effort estimates, deterministic commercial outputs and proposal artifacts.
 
-## 1. Product vision
+## Product vision
 
-Solution Deal Agent is a conversational agentic platform that assists the full pre-sales / solution-design lifecycle.
+Solution Deal Agent is a conversational agentic platform for the pre-sales and solution-design lifecycle. It augments Sales, Pre-sales, Architects, Pricing and Review teams with reusable governed knowledge, GraphRAG retrieval, structured reasoning, deterministic commercial calculations and explicit human approval.
 
-It does **not** aim to replace Solution Architects, Data Architects, DevOps/DevSecOps Architects, Sales or Pricing specialists. Its purpose is to augment them with reusable knowledge, structured reasoning, traceability, deterministic calculations and human approval gates.
-
-The platform should help move an opportunity through the following lifecycle:
-
-```text
-Opportunity / RFP / Client Need
-        ↓
-Understand & Structure
-        ↓
-Find Precedents
-        ↓
-Design Solution
-        ↓
-Estimate Effort
-        ↓
-Calculate Cost / Price
-        ↓
-Validate
-        ↓
-Generate Artifacts
-        ↓
-Human Approval
-        ↓
-Won / Lost
-        ↓
-Knowledge Feedback Loop
+```mermaid
+flowchart LR
+    O[Opportunity / RFP] --> I[Intake]
+    I --> K[GraphRAG Knowledge]
+    K --> A[Architecture]
+    A --> E[Effort Estimate]
+    E --> P[Deterministic Pricing]
+    P --> V[Validation]
+    V --> G[Proposal Artifacts]
+    G --> H[Human Approval]
+    H --> W[Won / Lost]
+    W --> K
 ```
 
-## 2. North Star
+## North Star
 
-> **Reduce the cycle time required to produce a high-quality, traceable and commercially consistent proposal while preserving human accountability.**
+> **Reduce the median time from qualified opportunity to a validated proposal-ready package while preserving traceability, commercial consistency and human accountability.**
 
-Primary North Star metric:
+Quality guardrails:
 
-**Median time from qualified opportunity to validated proposal-ready package.**
+- critical claims backed by evidence;
+- architecture decisions linked to requirements/policies/precedents;
+- transparent estimation basis;
+- deterministic pricing;
+- cross-artifact consistency;
+- human approval;
+- retrieval groundedness.
 
-The metric must always be read together with quality guardrails so that speed is never optimized at the expense of correctness.
+## Core experience
 
-### Quality guardrails
+A deal can start in two ways:
 
-- % of critical claims with traceable source/evidence.
-- % of architecture decisions linked to requirements, policies or precedents.
-- % of estimates with explicit assumptions and calculation basis.
-- proposal consistency across technical scope, effort, price and generated artifacts.
-- human validation / approval rate.
-- estimate-vs-actual variance when delivery actuals become available.
-
-## 3. Business objectives
-
-1. Reduce repetitive work in pre-sales and solution design.
-2. Reuse validated knowledge from historical proposals and enterprise architecture standards.
-3. Improve consistency between requirement, technical design, effort, cost, price and commercial documentation.
-4. Make architectural and commercial reasoning traceable.
-5. Capture expert knowledge as reusable governed assets.
-6. Shorten response times for RFP/RFI and client opportunities.
-7. Create a learning loop from Won/Lost opportunities and, later, from estimated-vs-actual delivery data.
-
-## 4. Target users
-
-- Sales / Account teams.
-- Pre-sales teams.
-- Solution Architects.
-- Software Architects.
-- Data Architects.
-- Cloud Architects.
-- DevOps / DevSecOps Architects.
-- Pricing / Commercial specialists.
-- Proposal / Bid teams.
-- Delivery leaders involved in handoff after Won.
-
-## 5. Core experience
-
-The primary experience is conversational.
-
-A user can start with either:
-
-### A. Conversational opportunity
-
-```text
-"I have an opportunity to modernize a data platform for a bank..."
-```
-
-The system progressively asks for missing information and builds the Deal Spec.
-
-### B. RFP / RFI upload
-
-The user uploads a document. The system:
-
-1. parses the document;
-2. extracts requirements;
-3. classifies requirements;
-4. identifies ambiguities, gaps and contradictions;
-5. creates clarification questions;
-6. creates or updates the Deal Spec;
-7. preserves traceability back to the original document;
-8. activates the specialist agents required for the next stage.
+1. **Conversation:** the user describes the opportunity and the Intake Agent progressively constructs the Deal Spec.
+2. **RFP/RFI:** the user uploads a file; the platform first persists it in the controlled **Google Cloud Storage input zone** and only then starts parsing, chunking and knowledge processing.
 
 > **When an RFP exists, the RFP initiates the Deal Spec. When no RFP exists, the conversation builds it.**
 
-## 6. Agentic operating model
+## Mandatory ingestion rule
 
-### 6.1 Deal Orchestrator
-
-The main conversational agent. It owns the opportunity state, decides which specialist capability should act next, manages dependencies, asks the user for missing information and coordinates human approval.
-
-### 6.2 Opportunity / Intake Agent
-
-Understands the opportunity or RFP and structures business and technical context.
-
-Expected outputs include:
-
-- objectives;
-- scope;
-- requirements;
-- constraints;
-- assumptions;
-- exclusions;
-- integrations;
-- volumetry;
-- SLA / RTO / RPO when relevant;
-- timeline;
-- deliverables;
-- clarification questions;
-- known / unknown / assumed information.
-
-### 6.3 Precedent / Knowledge Agent
-
-Retrieves comparable historical proposals, solution patterns, reference designs, assumptions, WBS, effort ranges, lessons learned and related evidence.
-
-Initial retrieval can combine:
-
-- metadata filters;
-- keyword search;
-- vector / semantic search.
-
-The architecture must remain open to future relationship-aware retrieval / knowledge graph / GraphRAG when justified by evidence.
-
-### 6.4 Architect Agent
-
-Proposes technical solution options using three explicit inputs:
-
-```text
-Current requirements
-      +
-Governed architecture knowledge / policies / patterns
-      +
-Relevant historical precedents
-      ↓
-Traceable architecture decision
+```mermaid
+flowchart LR
+    U[Upload / curated source] --> API[Upload API]
+    API --> GCS[(Cloud Storage INPUT)]
+    GCS --> PARSE[Parse / normalize]
+    PARSE --> CHUNK[Chunk]
+    CHUNK --> EMB[Embed]
+    EMB --> VR[Vector index]
+    CHUNK --> KG[Knowledge graph]
+    VR --> R[GraphRAG]
+    KG --> R
 ```
 
-The Architect Agent must:
+**Chunking never receives a browser/local file directly. Its source is always a versioned object in the configured GCS input zone.**
 
-- ask questions when information is insufficient;
-- compare alternatives where material;
-- identify trade-offs;
-- reference the policies, patterns, requirements and precedents used;
-- document assumptions;
-- generate Architecture Decision Records or equivalent decision evidence;
-- never present an unsupported architectural claim as authoritative.
+## Agentic operating model
 
-Architecture knowledge can be curated by Solution Architects, Data Architects, Software Architects, Cloud Architects and DevOps/DevSecOps specialists inside the platform.
+- **Deal Orchestrator** — owns conversation and deal lifecycle coordination.
+- **Intake / RFP Agent** — extracts and structures requirements, gaps and clarifications.
+- **Knowledge / GraphRAG Agent** — retrieves architecture knowledge and comparable precedents.
+- **Architect Agent** — proposes traceable architecture decisions and asks for missing critical information.
+- **Effort Estimator Agent** — produces WBS, roles, FTE/hours, dependencies and estimate rationale.
+- **Pricing Capability** — deterministic calculation from structured effort and commercial rules.
+- **Validator Agent** — independently checks completeness, evidence and consistency.
+- **Artifact Agent** — generates technical/economic proposal outputs from an approved Deal Spec.
 
-### 6.5 Effort Estimator Agent
-
-Builds the activity/WBS and estimates roles, FTEs, hours, duration, dependencies and uncertainty.
-
-Historical effort is evidence, not an automatic answer. The agent must explain what precedent or estimation rule was used and which current-deal factors change the estimate.
-
-### 6.6 Pricing Capability / Pricing Agent
-
-Transforms approved effort into cost and client price according to the applicable business-unit rules.
-
-Potential inputs:
-
-- role / band;
-- geography;
-- business unit;
-- rate card;
-- currency;
-- margin rules;
-- discounts;
-- contingency;
-- tax or commercial rules where applicable.
-
-**Principle:** LLMs may explain pricing, but calculations must be executed through deterministic rules/tools.
-
-### 6.7 Validator Agent
-
-Acts as an independent quality and consistency gate across the lifecycle.
-
-Validation dimensions may include:
-
-- completeness;
-- architecture compliance;
-- source traceability;
-- estimation traceability;
-- pricing-rule compliance;
-- consistency across artifacts;
-- unsupported assumptions;
-- unresolved requirements;
-- proposal readiness.
-
-### 6.8 Artifact Agent
-
-Generates proposal outputs from the approved Deal Spec instead of reconstructing content independently.
-
-Candidate artifacts:
-
-- technical proposal;
-- commercial proposal;
-- pricing summary;
-- executive presentation;
-- statement of work;
-- PCR or equivalent handoff artifact;
-- compliance matrix;
-- WBS;
-- assumptions / exclusions;
-- risk register;
-- client email / response package.
-
-## 7. Deal Spec — single source of truth
-
-The platform uses a structured **Deal Spec** as the canonical state of an opportunity.
+## Deal Spec — single source of truth
 
 ```text
 Deal
-├── Opportunity
-├── Client Context
-├── Requirements
-├── Clarifications
-├── Scope
-├── Architecture
-├── Architecture Decisions
-├── Components
-├── Precedents
-├── WBS
-├── Roles / FTE
-├── Effort
-├── Costs
-├── Price
-├── Risks
-├── Assumptions
-├── Exclusions
-├── Deliverables
-├── Evidence / Sources
-├── Validation Results
+├── Opportunity / Client Context
+├── Source Documents
+├── Requirements / Clarifications
+├── Scope / Assumptions / Exclusions
+├── Architecture / ADRs / Components
+├── Evidence / Precedents
+├── WBS / Roles / FTE / Effort
+├── Cost / Price / Margin
+├── Risks / Deliverables
+├── Validation Findings
+├── Artifacts
 └── Approvals
 ```
 
-Generated PPT, proposal, SoW, pricing document or PCR are views derived from this governed source of truth.
+All generated outputs are views of a specific Deal Spec version.
 
-## 8. Knowledge model
+## Knowledge architecture
 
-The solution distinguishes at least four knowledge classes:
+The first construction baseline uses **GraphRAG** across three governed knowledge domains:
 
-| Knowledge class | Examples | Intended use |
+| Domain | Examples | Purpose |
 |---|---|---|
-| Reusable knowledge | patterns, policies, reference architectures, controls | guide decisions |
-| Historical evidence | previous proposals, WBS, estimates, lessons learned | compare / support |
-| Current master data | rate cards, commercial rules, role catalog | deterministic calculation |
-| Opportunity context | client requirements, RFP, constraints, clarifications | parameterize current deal |
+| Architecture | policies, patterns, standards, reference architectures | guide solution decisions |
+| Precedents | historical proposals, WBS, estimates, lessons learned | support comparison and estimation |
+| Opportunity | current RFP and supporting client material | current-deal grounding |
 
-Every relevant reusable asset should progressively include metadata such as owner, source, version, effective date, lifecycle status, domain and approval status.
+The ingestion pipeline performs:
 
-## 9. Human-in-the-loop principles
+**GCS input → normalization → semantic/structural chunking → embeddings/vector index → entity/relationship extraction → knowledge graph → hybrid GraphRAG retrieval.**
 
-The platform assists; accountable people approve.
+For FAST DEMO, vector-index and graph artifacts are persisted in GCS through replaceable adapters. This is a demo storage decision, not a claim that object storage is the final production vector/graph database.
 
-Human approval is required before high-impact transitions such as:
+## GCP construction baseline
 
-- accepting a final architecture;
-- approving commercial assumptions;
-- approving effort / staffing baseline;
-- releasing external pricing;
-- issuing a final proposal;
-- promoting an opportunity to delivery handoff.
-
-## 10. Product principles
-
-1. **Do not invent — ask.**
-2. **Do not decide without evidence — reference.**
-3. **Reuse before rebuilding.**
-4. **Separate reasoning from deterministic calculation.**
-5. **One Deal Spec, many artifacts.**
-6. **Human accountability remains explicit.**
-7. **Every Won/Lost result can enrich future decisions.**
-8. **Architecture and rigor grow with risk and maturity.**
-
-## 11. Development approach
-
-This repository follows **PA-SDD — Progressive Agentic Spec-Driven Development** from `JuliusCordova/DevPattern`.
-
-For this project:
-
-```text
-IDEA
-  ↓
-FAST DEMO   ← current target
-  ↓
-MVP
-  ↓
-PRODUCT
+```mermaid
+flowchart TB
+    UI[Web UI] --> CR[Cloud Run]
+    CR --> ADK[Google ADK Orchestrator]
+    ADK --> GEM[Vertex AI / Gemini]
+    ADK --> DEAL[Deal Services]
+    ADK --> RAG[GraphRAG Service]
+    RAG --> EMB[Vertex AI Embeddings]
+    RAG --> GCS[(Cloud Storage: input + derived knowledge artifacts)]
+    DEAL --> SQL[(Cloud SQL PostgreSQL)]
+    CR --> LOG[Cloud Logging]
+    CR --> SM[Secret Manager]
 ```
 
-The FAST DEMO should prove agentic behavior, traceability and business value with the fewest moving parts. It should not prematurely reproduce the full production architecture.
-
-See:
-
-- `docs/SPEC.md`
-- `docs/ARCHITECTURE.md`
-- `docs/AGENT_CONTRACTS.md`
-- `docs/ROADMAP.md`
-
-## 12. Demo target — Google Cloud
-
-The initial demonstration is planned on GCP using the DevPattern GCP reference baseline.
-
-Initial target components:
+Initial platform components:
 
 - Cloud Run;
 - Google ADK;
 - Vertex AI / Gemini;
-- simple governed tools;
-- lightweight persistent state only where needed;
-- document / knowledge ingestion required by the demo;
-- logging and basic evaluation evidence.
+- Vertex AI Embeddings;
+- Cloud Storage input and derived artifact zones;
+- Cloud SQL PostgreSQL for structured Deal Spec state;
+- Cloud Logging;
+- Secret Manager;
+- Artifact Registry + Cloud Build as construction/deployment matures.
 
-Although the business model is multi-agent, the FAST DEMO should keep deployment/runtime boundaries simple. Specialist agents may initially execute within one controlled ADK application/runtime and only be separated when scale, security, ownership or operational evidence justifies it.
+## Software architecture
 
-## 13. Initial demo success definition
+The project follows **PA-SDD / DevPattern** and adopts **Hexagonal Slice Architecture** because the product has meaningful business rules and replaceable dependencies such as LLM, parser, embeddings, vector store, graph store, pricing rules and persistence.
 
-A demo is successful when a user can:
+```mermaid
+flowchart LR
+    D[UI / API / Agent] --> A[Application Use Case]
+    A --> DOM[Domain Logic]
+    A --> P[Ports]
+    P --> X[Adapters]
+    X --> EXT[GCP / external technology]
+```
 
-1. create an opportunity conversationally **or upload an RFP**;
-2. obtain structured requirements with source traceability;
-3. retrieve relevant precedents;
-4. receive a proposed architecture with cited rationale and explicit unknowns;
-5. obtain a traceable effort estimate;
-6. execute a deterministic demo pricing calculation;
-7. run an independent validation step;
-8. generate at least one proposal artifact from the same Deal Spec;
-9. inspect the evidence used for the important decisions.
+The agent acts as orchestrator/driving adapter. Critical rules such as pricing, proposal-readiness gates and lifecycle transitions remain explicit application/domain behavior.
 
-## 14. Current status
+## Product principles
 
-**Status: Product definition / FAST DEMO specification**
+1. **Do not invent — ask.**
+2. **Do not decide without evidence — reference.**
+3. **GCS input before chunking.**
+4. **Reuse before rebuilding.**
+5. **Graph + semantic retrieval for knowledge grounding.**
+6. **Separate reasoning from deterministic calculation.**
+7. **One Deal Spec, many artifacts.**
+8. **Human accountability remains explicit.**
+9. **Every Won/Lost result can enrich future decisions.**
+10. **Architecture rigor grows with risk and maturity.**
 
-No production-readiness claim is made at this stage.
+## FAST DEMO success definition
+
+A successful Golden Deal demonstrates end-to-end:
+
+1. upload RFP to controlled GCS input;
+2. parse and chunk with provenance;
+3. create vector and graph knowledge artifacts;
+4. extract traceable requirements and clarification questions;
+5. retrieve architecture policies and precedents using GraphRAG;
+6. produce traceable architecture decisions;
+7. generate WBS/effort estimate;
+8. calculate deterministic cost/price/margin;
+9. detect seeded inconsistencies with Validator;
+10. obtain explicit human approval;
+11. generate technical proposal and pricing summary from the same Deal Spec version.
+
+## Repository index
+
+- [`docs/SPEC.md`](docs/SPEC.md) — SPEC-001: user stories, FR/NFR, business rules, acceptance criteria and eval baseline.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — GCP, GraphRAG, ingestion, chunking and Hexagonal Slice architecture.
+- [`docs/AGENT_CONTRACTS.md`](docs/AGENT_CONTRACTS.md) — agent/tool behavioral boundaries.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — progressive FAST DEMO → MVP → PRODUCT evolution.
+- [`docs/CONSTRUCTION_READINESS.md`](docs/CONSTRUCTION_READINESS.md) — prerequisites and first implementation slices.
+
+## Current status
+
+**SPEC-001 construction baseline being finalized.**
+
+The next gate is not “write all agents”. It is to prove the foundational knowledge chain:
+
+```text
+GCS INPUT
+→ Parse / Normalize
+→ Chunk
+→ Embed
+→ Vector Index
+→ Graph Extraction
+→ GraphRAG Retrieval
+→ Traceable Agent Output
+```
